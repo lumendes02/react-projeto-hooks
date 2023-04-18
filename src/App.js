@@ -1,12 +1,13 @@
 import P from 'prop-types';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import './App.css';
 
-const Post = ({post}) => {
+const Post = ({post, handleClick}) => {
   console.log('filho')
   return (
     <div key={post.id} className='post'>
-      <h1>{post.title}</h1>
+      <h1 
+      onClick={() => handleClick(post.title)}>{post.title}</h1>
       <p>{post.body}</p>
     </div>
   )
@@ -18,11 +19,14 @@ Post.propTypes = {
     title: P.string,
     body: P.string
   }),
+  onClick: P.func
 }
 
 function App() {
   const [posts, setPosts] = useState([]);
   const [value, setValue] = useState('');
+  const input = useRef(null);
+
   console.log('pai');
 
   useEffect(() => {
@@ -31,14 +35,24 @@ function App() {
       .then(r => setPosts(r))
   }, []);
 
+  useEffect(() => {
+    input.current.focus();
+  },[value])
+
+  const handleClick = (value) => {
+    setValue(value);
+  }
+
   return (
     <div className='App'>
       <p>
-        <input type="search" value={value} 
+        <input ref={input} type="search" value={value} 
         onChange={(e) => setValue(e.target.value)}></input>
       </p>
       {useMemo(() => {
-        return posts.length > 0 && posts.map(post => (<Post key={post.id} post={post}/>))
+        return posts.length > 0 && 
+        posts.map(post => 
+          (<Post key={post.id} post={post} handleClick={handleClick}/>))
       }, [posts])}
       {posts.length <= 0 && <p>Ainda não existem posts</p>}
     </div>
