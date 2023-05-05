@@ -1,41 +1,71 @@
-import React, { useContext, useEffect, useMemo, useReducer, useRef, useState } from 'react';
+import P from 'prop-types';
+import React, { createContext, useContext, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import './App.css';
 
-const globalState = {
+// action.js
+export const actions = {
+  CHANGE_TITLE: 'CHANGE_TITLE',
+}
+
+// data.js
+export const globalState = {
   title: 'O titulos que contexto',
   body: 'body do contexto',
   counter: 0,
 }
 
-const reducer = (state, action) => {
+// reducer.js
+export const reducer = (state,action) => {
   switch(action.type) {
-    case 'muda':
-      console.log('chamou muda com', action.payload);
-      return {...state, title: action.payload};
-    case 'inverter':
-      console.log('chamou inverter');
-      const {title} = state;
-      return {...state, title: title.split('').reverse().join('')};
+    case actions.CHANGE_TITLE: {
+      console.log('muda titulo')
+      return {...state, title: action.payload}
+    }
     default:
-      console.log('default');
+      console.log();
   }
-
-  return {...state};
+  return {...state}
 }
 
-function App() {
+// AppContext
+export const Context = createContext();
+export const AppContext = ({children}) => {
   const [state, dispatch] = useReducer(reducer, globalState);
-  const {counter, title, body} = state;
 
+  const changeTitle = (payload) => {
+    dispatch({type: actions.CHANGE_TITLE, payload})
+  }
+
+  return <Context.Provider value={{state, changeTitle}}>{children}</Context.Provider>
+};
+
+AppContext.propTypes = {
+  children: P.node,
+};
+
+// h1/index.jsx
+export const H1 = () => {
+  const context = useContext(Context);
+  const inputRef = useRef();
+
+  return ( 
+    <>
+      <h1 onClick={()=> context.changeTitle(inputRef.current.value)}>
+        {context.state.title}
+      </h1>
+      <input type='text' ref={inputRef}></input>
+    </>
+  )
+}
+
+// app.jsx
+function App() {
   return (
-    <div>
-      <h1>{title} {counter}</h1>
-      <button onClick={() => dispatch({
-         type: 'muda',
-         payload: new Date().toLocaleString('pt-BR'),
-        })}>Click</button>
-      <button onClick={() => dispatch({ type: 'inverter' })}>inverter</button>
-    </div>
+    <AppContext>
+      <div>
+        <H1></H1>
+      </div>
+    </AppContext>
   )
 }
 
